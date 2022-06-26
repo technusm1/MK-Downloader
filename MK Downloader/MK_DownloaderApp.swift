@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct MK_DownloaderApp: App {
+    // Creating all this based on Paul Hudson's tutorial: https://www.hackingwithswift.com/books/ios-swiftui/how-to-combine-core-data-and-swiftui
+    @StateObject private var dataController = DataController()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.managedObjectContext, dataController.container.viewContext)
         }
     }
 }
