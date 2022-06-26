@@ -1,5 +1,4 @@
 # MK-Downloader
-Its much better to use this than downloading using Safari on iOS/iPadOS.
 
 🔥 **This project has just barely begun, and has lot of buggy code inside at the moment, and is thus not suitable for general use. You've been warned.**
 
