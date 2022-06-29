@@ -53,7 +53,7 @@ struct DownloadItem: View {
     @State var lastDownloadAmount: Double = 0
     @State var lastTime = DispatchTime.now()
     @State var item: Download
-    @State var currentDownloadStatus: DownloadManager.DownloadStatus = .running
+    @State var currentDownloadStatus: DownloadManager.DownloadStatus = .invalid
     @State var canUpdateDownloadProgress: Bool = true
     
     private func updateDownloadProgress(currentlyDownloaded: Double?, totalDownloadSize: Double?) {
@@ -118,21 +118,15 @@ struct DownloadItem: View {
             }
             Label("Pause/Resume", systemImage: currentDownloadStatus == .paused ? "play.fill" : "pause.fill").labelStyle(IconOnlyLabelStyle())
                 .onTapGesture {
-                    // Download is currently paused, need to resume
-                    if DownloadManager.shared.getStatusOfDownload(url: item.url) == .paused {
+                    print("On tap")
+                    if currentDownloadStatus == .paused {
                         currentDownloadStatus = .running
-                        DownloadManager.shared.resumeDownload(url: item.url)
-                        DownloadManager.shared.progressCallbackFunc = { currentlyDownloaded, totalDownloadSize in
-                            DispatchQueue.main.async {
-                                updateDownloadProgress(currentlyDownloaded: currentlyDownloaded, totalDownloadSize: totalDownloadSize)
-                            }
-                        }
-                    } else if DownloadManager.shared.getStatusOfDownload(url: item.url) == .running {
+                    } else if currentDownloadStatus == .running {
                         currentDownloadStatus = .paused
-                        DownloadManager.shared.pauseDownload(url: item.url)
                     }
                 }
                 .onAppear(perform: {
+                    print("On appear")
                     if let fileName = item.filename {
                         let documentsDir = FileOperationsUtil.getApplicationDocumentsDirectory()
                         let destination = documentsDir.appendingPathComponent(fileName)
@@ -145,8 +139,11 @@ struct DownloadItem: View {
                     if DownloadManager.shared.getStatusOfDownload(url: item.url) != .invalid {
                         currentDownloadStatus = DownloadManager.shared.getStatusOfDownload(url: item.url)
                     }
+                    print(currentDownloadStatus)
+                })
+                .onChange(of: currentDownloadStatus, perform: { newValue in
+                    print("On change")
                     if currentDownloadStatus == .running {
-                        // if the currentDownloadStatus SHOULD BE .running
                         DownloadManager.shared.resumeDownload(url: item.url)
                         DownloadManager.shared.progressCallbackFunc = { currentlyDownloaded, totalDownloadSize in
                             DispatchQueue.main.async {
@@ -154,7 +151,6 @@ struct DownloadItem: View {
                             }
                         }
                     } else if currentDownloadStatus == .paused {
-                        // if the currentDownloadStatus SHOULD BE .paused
                         DownloadManager.shared.pauseDownload(url: item.url)
                     }
                 })

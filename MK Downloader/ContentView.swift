@@ -29,6 +29,15 @@ struct ContentView: View {
                             }
                         }
                     }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu(content: {
+                            Button("Option 1", action: {})
+                            Button("Option 2", action: {})
+                            Button("Option 3", action: {})
+                        }) {
+                            Image(systemName: "ellipsis.circle")
+                        }
+                    }
                 }
         }
         .navigationViewStyle(.stack)

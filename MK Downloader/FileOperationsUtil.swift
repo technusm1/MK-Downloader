@@ -90,7 +90,6 @@ struct FileOperationsUtil {
         return -1
     }
     
-    
     static func deleteFiles(in path: URL) {
         let documentsUrl =  getApplicationDocumentsDirectory()
         do {
@@ -99,21 +98,5 @@ struct FileOperationsUtil {
                 try FileManager.default.removeItem(at: fileURL)
             }
         } catch  { print(error) }
-    }
-    
-    static func listAllFilesInDocumentsDirectory() {
-        let documentsUrl =  getApplicationDocumentsDirectory()
-        let fileURLs = try? FileManager.default.contentsOfDirectory(at: documentsUrl, includingPropertiesForKeys: nil)
-        print(fileURLs)
-    }
-    
-    static func writeDummyFileToDocumentsDirectory() {
-        let name = "Maheep-Intro.txt"
-        let documentsUrl =  getApplicationDocumentsDirectory()
-        let fileURL = documentsUrl.appendingPathComponent(name)
-        let myString = "My name is Maheep Kumar and I'm trying to write a file in iOS / iPadOS"
-        if let strData = myString.data(using: .utf8) {
-            try! strData.write(to: fileURL)
-        }
     }
 }

@@ -20,7 +20,7 @@ class DataController: ObservableObject {
     }
 }
 
-class DownloadManager : ObservableObject {
+class DownloadManager {
     static let shared = DownloadManager()
     static let moc = DataController().container.viewContext
     
