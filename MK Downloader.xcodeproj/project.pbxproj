@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		4C272F43286736C900ECBD88 /* FileOperationsUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C272F42286736C900ECBD88 /* FileOperationsUtil.swift */; };
-		4C272F46286760F500ECBD88 /* FaviconFinder in Frameworks */ = {isa = PBXBuildFile; productRef = 4C272F45286760F500ECBD88 /* FaviconFinder */; };
 		4C4101192866227E003C6F4B /* MK_DownloaderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C4101182866227E003C6F4B /* MK_DownloaderApp.swift */; };
 		4C41011B2866227E003C6F4B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C41011A2866227E003C6F4B /* ContentView.swift */; };
 		4C41011D2866227F003C6F4B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C41011C2866227F003C6F4B /* Assets.xcassets */; };
@@ -17,6 +16,7 @@
 		4C457B542866A7E500489B31 /* DownloadDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C457B532866A7E500489B31 /* DownloadDetailsView.swift */; };
 		4C457B572866E97C00489B31 /* Download.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4C457B552866E97C00489B31 /* Download.xcdatamodeld */; };
 		4C457B592866EB5C00489B31 /* DownloadDataController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C457B582866EB5C00489B31 /* DownloadDataController.swift */; };
+		4CAA1351286B64EA000E3AAE /* UIImageExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CAA1350286B64EA000E3AAE /* UIImageExtensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +30,8 @@
 		4C457B532866A7E500489B31 /* DownloadDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadDetailsView.swift; sourceTree = "<group>"; };
 		4C457B562866E97C00489B31 /* Download.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Download.xcdatamodel; sourceTree = "<group>"; };
 		4C457B582866EB5C00489B31 /* DownloadDataController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadDataController.swift; sourceTree = "<group>"; };
-		4C457B5A286706FE00489B31 /* MK-Downloader-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "MK-Downloader-Info.plist"; sourceTree = SOURCE_ROOT; };
+		4C457B5A286706FE00489B31 /* MK-Downloader-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MK-Downloader-Info.plist"; sourceTree = SOURCE_ROOT; };
+		4CAA1350286B64EA000E3AAE /* UIImageExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIImageExtensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,7 +39,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C272F46286760F500ECBD88 /* FaviconFinder in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -74,6 +74,7 @@
 				4C41011C2866227F003C6F4B /* Assets.xcassets */,
 				4C41011E2866227F003C6F4B /* Preview Content */,
 				4C272F42286736C900ECBD88 /* FileOperationsUtil.swift */,
+				4CAA1350286B64EA000E3AAE /* UIImageExtensions.swift */,
 			);
 			path = "MK Downloader";
 			sourceTree = "<group>";
@@ -103,7 +104,6 @@
 			);
 			name = "MK Downloader";
 			packageProductDependencies = (
-				4C272F45286760F500ECBD88 /* FaviconFinder */,
 			);
 			productName = "MK Downloader";
 			productReference = 4C4101152866227E003C6F4B /* MK Downloader.app */;
@@ -134,7 +134,6 @@
 			);
 			mainGroup = 4C41010C2866227E003C6F4B;
 			packageReferences = (
-				4C272F44286760F500ECBD88 /* XCRemoteSwiftPackageReference "FaviconFinder" */,
 			);
 			productRefGroup = 4C4101162866227E003C6F4B /* Products */;
 			projectDirPath = "";
@@ -165,6 +164,7 @@
 				4C41011B2866227E003C6F4B /* ContentView.swift in Sources */,
 				4C457B592866EB5C00489B31 /* DownloadDataController.swift in Sources */,
 				4C457B542866A7E500489B31 /* DownloadDetailsView.swift in Sources */,
+				4CAA1351286B64EA000E3AAE /* UIImageExtensions.swift in Sources */,
 				4C4101272866245B003C6F4B /* DownloadsView.swift in Sources */,
 				4C4101192866227E003C6F4B /* MK_DownloaderApp.swift in Sources */,
 				4C272F43286736C900ECBD88 /* FileOperationsUtil.swift in Sources */,
@@ -377,25 +377,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		4C272F44286760F500ECBD88 /* XCRemoteSwiftPackageReference "FaviconFinder" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/will-lumley/FaviconFinder/";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		4C272F45286760F500ECBD88 /* FaviconFinder */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4C272F44286760F500ECBD88 /* XCRemoteSwiftPackageReference "FaviconFinder" */;
-			productName = FaviconFinder;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		4C457B552866E97C00489B31 /* Download.xcdatamodeld */ = {

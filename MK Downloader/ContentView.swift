@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    @Environment(\.managedObjectContext) var moc
     @FetchRequest(sortDescriptors: []) var downloads: FetchedResults<Download>
     
     @State var downloadAddRequested: Bool = false
