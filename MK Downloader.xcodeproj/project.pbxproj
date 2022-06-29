@@ -50,6 +50,7 @@
 			children = (
 				4C457B552866E97C00489B31 /* Download.xcdatamodeld */,
 				4C457B582866EB5C00489B31 /* DownloadDataController.swift */,
+				4C457B5A286706FE00489B31 /* MK-Downloader-Info.plist */,
 				4C4101172866227E003C6F4B /* MK Downloader */,
 				4C4101162866227E003C6F4B /* Products */,
 			);
@@ -66,7 +67,6 @@
 		4C4101172866227E003C6F4B /* MK Downloader */ = {
 			isa = PBXGroup;
 			children = (
-				4C457B5A286706FE00489B31 /* MK-Downloader-Info.plist */,
 				4C4101182866227E003C6F4B /* MK_DownloaderApp.swift */,
 				4C41011A2866227E003C6F4B /* ContentView.swift */,
 				4C4101262866245B003C6F4B /* DownloadsView.swift */,
