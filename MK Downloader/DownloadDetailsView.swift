@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DownloadDetailsView: View {
     @Binding var isOpen: Bool
+    @State var addMode: Bool = false
     
     @State var downloadURL: String = {
         // Privacy preserving way of doing things, and pasting only when we're guaranteed to be sure
@@ -46,7 +47,10 @@ struct DownloadDetailsView: View {
                 Button {
                     // save downloads
                     if downloadURL.isValidURL {
-                        DownloadManager.shared.addDownload(url: URL(string: downloadURL)!, destination: (destinationFileName.isEmpty ? URL(string: downloadURL)!.lastPathComponent : destinationFileName))
+                        if addMode {
+                            print(downloadURL)
+                            DownloadManager.shared.addDownload(url: URL(string: downloadURL)!, destination: (destinationFileName.isEmpty ? URL(string: downloadURL)!.lastPathComponent : destinationFileName))
+                        }
                         isOpen = false
                     }
                 } label: {

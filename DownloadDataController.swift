@@ -24,7 +24,7 @@ class DownloadManager {
     static let shared = DownloadManager()
     static let moc = DataController().container.viewContext
     
-    var progressCallbackFunc: ((_ currentlyDownloaded: Double?, _ totalDownloadSize: Double?) -> ())?
+    var count: Int = 0
     var downloadsDict: [String : (status: DownloadStatus, associatedFile: String, downloadTask: Task<Void, Error>?)] = [:]
     
     init() {
@@ -33,6 +33,7 @@ class DownloadManager {
             for download in downloads {
                 downloadsDict[download.url!.absoluteString] = (status: .paused, associatedFile: download.filename!, downloadTask: nil)
             }
+            count = downloads.count
         }
     }
     
@@ -44,8 +45,9 @@ class DownloadManager {
         let downloadToSave = Download(context: DownloadManager.moc)
         downloadToSave.url = url
         downloadToSave.filename = destinationFileName ?? url.lastPathComponent
-        try? DownloadManager.moc.save()
         downloadsDict[url.absoluteString] = (status: .running, associatedFile: downloadToSave.filename!, downloadTask: nil)
+        count += 1
+        try? DownloadManager.moc.save()
     }
     
     func getStatusOfDownload(url: URL?) -> DownloadStatus {
@@ -57,7 +59,7 @@ class DownloadManager {
         return .invalid
     }
     
-    func resumeDownload(url: URL?) {
+    func resumeDownload(url: URL?, progressCallbackFunc: ((_ currentlyDownloaded: Double?, _ totalDownloadSize: Double?) -> ())? = nil) {
         if let url = url {
             downloadsDict[url.absoluteString]?.status = .running
             downloadsDict[url.absoluteString]?.downloadTask = Task { () in
@@ -69,9 +71,13 @@ class DownloadManager {
                 let fileSizeOnDisk = FileOperationsUtil.getSizeofFile(atPath: destination)
                 if fileSizeOnDisk > 0 {
                     request.setValue("bytes=\(fileSizeOnDisk)-", forHTTPHeaderField: "Range")
-                    try await download(from: request, saveTo: destination, existingFileSize: Double(fileSizeOnDisk))
+                    try await download(from: request, saveTo: destination, existingFileSize: Double(fileSizeOnDisk), progressCallbackFunc: progressCallbackFunc)
                 } else {
-                    try await download(from: request, saveTo: destination)
+                    try await download(from: request, saveTo: destination, progressCallbackFunc: progressCallbackFunc)
+                }
+                if !Task.isCancelled {
+                    // Download is now complete. Completed downloads are always paused
+                    downloadsDict[url.absoluteString]?.status = .paused
                 }
             }
         }
@@ -92,18 +98,28 @@ class DownloadManager {
             downloadsDict.removeValue(forKey: url.absoluteString)
             DownloadManager.moc.delete(download)
             try? DownloadManager.moc.save()
+            count -= 1
         }
     }
     
-    private func download(from request: URLRequest, saveTo destination: URL, existingFileSize: Double = 0.0) async throws {
+    private func download(from request: URLRequest, saveTo destination: URL, existingFileSize: Double = 0.0, progressCallbackFunc: ((_ currentlyDownloaded: Double?, _ totalDownloadSize: Double?) -> ())? = nil) async throws {
         let bufferSize = 65_536
         let estimatedSize: Int64 = 1_000_000
         // Based on guidance from: https://khanlou.com/2021/10/download-progress-with-awaited-network-tasks/
         let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
         // note, if server cannot provide expectedContentLength, this will be -1
-        let expectedLength = response.expectedContentLength
+        let expectedLength = max(response.expectedContentLength, 0)
+        print("Expected length: \(expectedLength)")
         // totalDownloadSize = Double(expectedLength > 0 ? expectedLength : estimatedSize)
-        progressCallbackFunc?(nil, existingFileSize + Double(expectedLength > 0 ? expectedLength : estimatedSize))
+        progressCallbackFunc?(existingFileSize, existingFileSize + Double(expectedLength >= 0 ? expectedLength : estimatedSize))
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            // if http response status code is client or server error
+            // Refer: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+            if (400...599).contains(httpResponse.statusCode) {
+                return
+            }
+        }
         
         guard let output = OutputStream(url: destination, append: true) else {
             throw URLError(.cannotOpenFile)

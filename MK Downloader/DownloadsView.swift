@@ -9,13 +9,17 @@ import SwiftUI
 
 struct DownloadsView: View {
     @Environment(\.managedObjectContext) var moc
-    @FetchRequest(sortDescriptors: []) var downloads: FetchedResults<Download>
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
+    @FetchRequest(sortDescriptors: []) var downloads: FetchedResults<Download>
+    @State var downloadStateDict: [String : DownloadManager.DownloadStatus] = [:]
+
     @State var isSheetPresented: Bool = false
     
     func deleteDownloads(at offsets: IndexSet) {
         for offset in offsets {
             let download = downloads[offset] // find this book in our fetch request
+            downloadStateDict.removeValue(forKey: download.url!.absoluteString)
             DownloadManager.shared.removeDownload(download)
         }
     }
@@ -23,11 +27,58 @@ struct DownloadsView: View {
     var body: some View {
         List {
             ForEach(downloads) { download in
-                DownloadItem(isSheetPresented: $isSheetPresented, item: download)
-                    //.sheet(isPresented: $isSheetPresented) {}
+                DownloadItem(item: download, currentDownloadStatus: Binding<DownloadManager.DownloadStatus>(get: {
+                    if let downloadStatusValue = downloadStateDict[download.url!.absoluteString] {
+                        return downloadStatusValue
+                    }
+                    return .invalid
+                }, set: { newValue in
+                    downloadStateDict[download.url!.absoluteString] = newValue
+                }))
             }.onDelete(perform: deleteDownloads)
-//            .buttonStyle(BorderlessButtonStyle())
-            // This button style needs to be set because Apple is infinitely wise: https://developer.apple.com/forums/thread/119541?answerId=394370022#394370022
+        }.sheet(isPresented: self.$isSheetPresented) {
+            NavigationView {
+                DownloadDetailsView(isOpen: self.$isSheetPresented, addMode: true)
+                    .navigationTitle("Add Download")
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    isSheetPresented = true
+                } label: {
+                    Label("New", systemImage: "plus.square.on.square").labelStyle(AdaptiveLabelStyle())
+                }
+            }
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if horizontalSizeClass == .compact {
+                    Menu(content: {
+                        Button("Pause all", action: {
+                            for i in downloadStateDict.keys {
+                                downloadStateDict[i] = .paused
+                            }
+                        })
+                        Button("Resume all", action: {
+                            for i in downloadStateDict.keys {
+                                downloadStateDict[i] = .running
+                            }
+                        })
+                    }) {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                } else {
+                    Button("Pause all", action: {
+                        for i in downloadStateDict.keys {
+                            downloadStateDict[i] = .paused
+                        }
+                    })
+                    Button("Resume all", action: {
+                        for i in downloadStateDict.keys {
+                            downloadStateDict[i] = .running
+                        }
+                    })
+                }
+            }
         }
     }
 }
@@ -45,7 +96,7 @@ struct AdaptiveLabelStyle: LabelStyle {
 }
 
 struct DownloadItem: View {
-    @Binding var isSheetPresented: Bool
+    @State var isSheetPresented: Bool = false
     
     @State var downloadAmount: Double = 0
     @State var totalDownloadSize: Double = 0
@@ -53,8 +104,9 @@ struct DownloadItem: View {
     @State var lastDownloadAmount: Double = 0
     @State var lastTime = DispatchTime.now()
     @State var item: Download
-    @State var currentDownloadStatus: DownloadManager.DownloadStatus = .invalid
     @State var canUpdateDownloadProgress: Bool = true
+    
+    @Binding var currentDownloadStatus: DownloadManager.DownloadStatus
     
     private func updateDownloadProgress(currentlyDownloaded: Double?, totalDownloadSize: Double?) {
         if let currentlyDownloaded = currentlyDownloaded {
@@ -64,10 +116,15 @@ struct DownloadItem: View {
             lastDownloadAmount = currentlyDownloaded
         }
         if let totalDownloadSize = totalDownloadSize {
-            self.totalDownloadSize = totalDownloadSize
+            if totalDownloadSize >= lastDownloadAmount {
+                self.totalDownloadSize = totalDownloadSize
+            }
         }
+        // The condition below is for when a particular download is complete.
         if let currentlyDownloaded = currentlyDownloaded, let totalDownloadSize = totalDownloadSize, (currentlyDownloaded == totalDownloadSize && currentlyDownloaded > 0) {
             currentDownloadStatus = .paused
+            lastDownloadAmount = 0
+            downloadSpeed = 0
         }
     }
     
@@ -142,10 +199,9 @@ struct DownloadItem: View {
                     print(currentDownloadStatus)
                 })
                 .onChange(of: currentDownloadStatus, perform: { newValue in
-                    print("On change")
+                    print("On change \(item.url) \(downloadAmount) \(totalDownloadSize)")
                     if currentDownloadStatus == .running {
-                        DownloadManager.shared.resumeDownload(url: item.url)
-                        DownloadManager.shared.progressCallbackFunc = { currentlyDownloaded, totalDownloadSize in
+                        DownloadManager.shared.resumeDownload(url: item.url) { currentlyDownloaded, totalDownloadSize in
                             DispatchQueue.main.async {
                                 updateDownloadProgress(currentlyDownloaded: currentlyDownloaded, totalDownloadSize: totalDownloadSize)
                             }
