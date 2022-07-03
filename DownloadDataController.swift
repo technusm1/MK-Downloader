@@ -38,7 +38,7 @@ class DownloadManager {
     }
     
     enum DownloadStatus {
-    case error, paused, running, invalid
+    case error, paused, running, invalid, completed
     }
     
     func addDownload(url: URL, destination destinationFileName: String?) {
@@ -76,8 +76,8 @@ class DownloadManager {
                     try await download(from: request, saveTo: destination, progressCallbackFunc: progressCallbackFunc)
                 }
                 if !Task.isCancelled {
-                    // Download is now complete. Completed downloads are always paused
-                    downloadsDict[url.absoluteString]?.status = .paused
+                    // Download is now complete
+                    downloadsDict[url.absoluteString]?.status = .completed
                 }
             }
         }

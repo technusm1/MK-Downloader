@@ -19,8 +19,8 @@ struct DownloadsView: View {
     func deleteDownloads(at offsets: IndexSet) {
         for offset in offsets {
             let download = downloads[offset] // find this book in our fetch request
-            downloadStateDict.removeValue(forKey: download.url!.absoluteString)
             DownloadManager.shared.removeDownload(download)
+            downloadStateDict.removeValue(forKey: download.url!.absoluteString)
         }
     }
     
@@ -55,7 +55,9 @@ struct DownloadsView: View {
                     Menu(content: {
                         Button("Pause all", action: {
                             for i in downloadStateDict.keys {
-                                downloadStateDict[i] = .paused
+                                if downloadStateDict[i] != .completed {
+                                    downloadStateDict[i] = .paused
+                                }
                             }
                         })
                         Button("Resume all", action: {
@@ -63,18 +65,45 @@ struct DownloadsView: View {
                                 downloadStateDict[i] = .running
                             }
                         })
+                        Button("Clear completed", action: {
+                            let removalSet = Set(
+                                downloadStateDict.compactMap { (key: String, value: DownloadManager.DownloadStatus) in
+                                return value == .completed ? key : nil
+                            })
+                            downloads.filter { download in
+                                removalSet.contains(download.url!.absoluteString)
+                            }.forEach { download in
+                                downloadStateDict.removeValue(forKey: download.url!.absoluteString)
+                                DownloadManager.shared.removeDownload(download)
+                            }
+                        })
+                        
                     }) {
                         Image(systemName: "ellipsis.circle")
                     }
                 } else {
                     Button("Pause all", action: {
                         for i in downloadStateDict.keys {
-                            downloadStateDict[i] = .paused
+                            if downloadStateDict[i] != .completed {
+                                downloadStateDict[i] = .paused
+                            }
                         }
                     })
                     Button("Resume all", action: {
                         for i in downloadStateDict.keys {
                             downloadStateDict[i] = .running
+                        }
+                    })
+                    Button("Clear completed", action: {
+                        let removalSet = Set(
+                            downloadStateDict.compactMap { (key: String, value: DownloadManager.DownloadStatus) in
+                            return value == .completed ? key : nil
+                        })
+                        downloads.filter { download in
+                            removalSet.contains(download.url!.absoluteString)
+                        }.forEach { download in
+                            DownloadManager.shared.removeDownload(download)
+                            downloadStateDict.removeValue(forKey: download.url!.absoluteString)
                         }
                     })
                 }
@@ -122,8 +151,7 @@ struct DownloadItem: View {
         }
         // The condition below is for when a particular download is complete.
         if let currentlyDownloaded = currentlyDownloaded, let totalDownloadSize = totalDownloadSize, (currentlyDownloaded == totalDownloadSize && currentlyDownloaded > 0) {
-            currentDownloadStatus = .paused
-            lastDownloadAmount = 0
+            currentDownloadStatus = .completed
             downloadSpeed = 0
         }
     }
@@ -173,7 +201,7 @@ struct DownloadItem: View {
                 }.opacity(0)
                 // The above is a very ugly hack to get ListView items and buttons working in harmony.
             }
-            Label("Pause/Resume", systemImage: currentDownloadStatus == .paused ? "play.fill" : "pause.fill").labelStyle(IconOnlyLabelStyle())
+            Label("Pause/Resume", systemImage: (currentDownloadStatus == .paused || currentDownloadStatus == .completed) ? "play.fill" : "pause.fill").labelStyle(IconOnlyLabelStyle())
                 .onTapGesture {
                     print("On tap")
                     if currentDownloadStatus == .paused {
