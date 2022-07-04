@@ -78,6 +78,8 @@ class DownloadManager {
                 if !Task.isCancelled {
                     // Download is now complete
                     downloadsDict[url.absoluteString]?.status = .completed
+                } else {
+                    downloadsDict[url.absoluteString]?.status = .paused
                 }
             }
         }
