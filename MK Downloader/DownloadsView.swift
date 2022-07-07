@@ -19,8 +19,8 @@ struct DownloadsView: View {
     func deleteDownloads(at offsets: IndexSet) {
         for offset in offsets {
             let download = downloads[offset] // find this book in our fetch request
-            DownloadManager.shared.removeDownload(download)
             downloadStateDict.removeValue(forKey: download.url!.absoluteString)
+            DownloadManager.shared.removeDownload(download)
         }
     }
     
@@ -211,7 +211,8 @@ struct DownloadItem: View {
                     }
                 }
                 .onAppear(perform: {
-                    print("On appear")
+                    print("On appear temp")
+                    print(FileManager.default.temporaryDirectory)
                     if let fileName = item.filename {
                         let documentsDir = FileOperationsUtil.getApplicationDocumentsDirectory()
                         let destination = documentsDir.appendingPathComponent(fileName)
@@ -227,7 +228,7 @@ struct DownloadItem: View {
                     print(currentDownloadStatus)
                 })
                 .onChange(of: currentDownloadStatus, perform: { newValue in
-                    print("On change \(item.url) \(downloadAmount) \(totalDownloadSize)")
+                    print("On change \(item.url) \(downloadAmount) \(totalDownloadSize) \(currentDownloadStatus)")
                     if currentDownloadStatus == .running {
                         DownloadManager.shared.resumeDownload(url: item.url) { currentlyDownloaded, totalDownloadSize in
                             DispatchQueue.main.async {

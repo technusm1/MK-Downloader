@@ -39,6 +39,14 @@ extension String {
 
         return urlTest.evaluate(with: trimmingCharacters(in: .whitespaces))
     }
+    
+    // Based on this answer at StackOverflow: https://stackoverflow.com/a/56616990/4385319
+    func match(_ regex: String) -> [[String]] {
+        let nsString = self as NSString
+        return (try? NSRegularExpression(pattern: regex, options: []))?.matches(in: self, options: [], range: NSMakeRange(0, nsString.length)).map { match in
+            (0..<match.numberOfRanges).map { match.range(at: $0).location == NSNotFound ? "" : nsString.substring(with: match.range(at: $0)) }
+        } ?? []
+    }
 }
 
 extension OutputStream {
