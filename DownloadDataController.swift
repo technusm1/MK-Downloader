@@ -45,6 +45,10 @@ class DownloadManager: NSObject, URLSessionDownloadDelegate {
     }
     
     func addDownload(url: URL, destination destinationFileName: String?) {
+        if downloadsDict[url.absoluteString] != nil {
+            // if downloadsDict already has a download by the name of the URL
+            return
+        }
         let downloadToSave = Download(context: DownloadManager.moc)
         downloadToSave.url = url
         downloadToSave.filename = destinationFileName ?? url.lastPathComponent
@@ -178,73 +182,5 @@ class DownloadManager: NSObject, URLSessionDownloadDelegate {
             self.downloadsDict[(downloadTask.originalRequest?.url!.absoluteString)!]?.progressCallbackFunc?(Double(FileOperationsUtil.getSizeofFile(atPath: destination)), Double(FileOperationsUtil.getSizeofFile(atPath: destination)))
         }
         print(destination)
-    }
-    
-    @available(*, unavailable)
-    private func download(from request: URLRequest, saveTo destination: URL, existingFileSize: Double = 0.0, progressCallbackFunc: ((_ currentlyDownloaded: Double?, _ totalDownloadSize: Double?) -> ())? = nil) async throws {
-        let bufferSize = 65_536
-        let estimatedSize: Int64 = 1_000_000
-        // Based on guidance from: https://khanlou.com/2021/10/download-progress-with-awaited-network-tasks/
-        let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
-        // note, if server cannot provide expectedContentLength, this will be -1
-        let expectedLength = max(response.expectedContentLength, 0)
-        print("Expected length: \(expectedLength)")
-        // totalDownloadSize = Double(expectedLength > 0 ? expectedLength : estimatedSize)
-        progressCallbackFunc?(existingFileSize, existingFileSize + Double(expectedLength >= 0 ? expectedLength : estimatedSize))
-        
-        if let httpResponse = response as? HTTPURLResponse {
-            // if http response status code is client or server error
-            // Refer: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-            if (400...599).contains(httpResponse.statusCode) {
-                return
-            }
-        }
-        
-        guard let output = OutputStream(url: destination, append: true) else {
-            throw URLError(.cannotOpenFile)
-        }
-        output.open()
-
-        var buffer = Data()
-        if expectedLength > 0 {
-            buffer.reserveCapacity(min(bufferSize, Int(expectedLength)))
-        } else {
-            buffer.reserveCapacity(bufferSize)
-        }
-        
-        var count: Int64 = 0
-        for try await byte in asyncBytes {
-            do {
-                try Task.checkCancellation()
-            } catch {
-                break
-            }
-            count += 1
-            buffer.append(byte)
-
-            if buffer.count >= bufferSize {
-                try output.write(buffer)
-                buffer.removeAll(keepingCapacity: true)
-
-                if expectedLength < 0 || count > expectedLength {
-                    // totalDownloadSize = Double(count + estimatedSize)
-                    progressCallbackFunc?(nil, existingFileSize + Double(count + estimatedSize))
-                }
-                // downloadAmount = Double(count)
-                progressCallbackFunc?(existingFileSize + Double(count), nil)
-            }
-        }
-
-        if !buffer.isEmpty {
-            try output.write(buffer)
-        }
-
-        output.close()
-        if Task.isCancelled {
-            return
-        }
-        // totalDownloadSize = Double(count)
-        // downloadAmount = Double(count)
-        progressCallbackFunc?(existingFileSize + Double(count), existingFileSize + Double(count))
     }
 }
